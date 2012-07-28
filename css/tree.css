@@ -1,0 +1,10 @@
+.gx-tree-radio {
+  background-image: url('../img/radio.gif');
+}
+
+.gx-tree-component {
+}
+
+.gx-tree-component-off {
+  display: none;
+}
