@@ -6,13 +6,19 @@ Ext.require([
 
   // Add print Preview + Create PDF
   'GeoExt.data.MapfishPrintProvider',
-  'GeoExt.panel.PrintMap'
+  'GeoExt.panel.PrintMap',
+
+  // Add popup  
+  'GeoExt.window.Popup'
+
 ]);
 
 Ext.application({
   name: 'ActionExample',
   launch: function(){
 
+    var thailand = new OpenLayers.Bounds(88,5,115,21);
+    
     var ctrl_measure_length, ctrl_measure_area;
 
     // Add print Preview + Create PDF
@@ -29,6 +35,9 @@ Ext.application({
     });
 
     var map = new OpenLayers.Map({});
+    map.maxExtent = thailand;
+    map.minZoomLevel = 5;
+    
     map.addControl(new OpenLayers.Control.LayerSwitcher());
     var wms1 = new OpenLayers.Layer.WMS(
       "OpenLayers WMS",
@@ -43,6 +52,57 @@ Ext.application({
     );
     
     var vector = new OpenLayers.Layer.Vector("vector");
+
+    // Add Popup
+    var popup
+    
+    // Add Popup: create select feature control
+    var selectCtrl = new OpenLayers.Control.SelectFeature(vector);
+
+    // Add Popup: define "createPopup" function
+    var bogusMarkup = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " +
+            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " +
+            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit." +
+            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.";
+
+    var xx = new Ext.form.TextField({
+      fieldLabel: 'Field1'
+    });
+    
+    function createPopup(feature) {
+        popup = Ext.create('GeoExt.window.Popup', {
+            title: 'My Popup',
+            location: feature,
+            width:200,
+            //html: bogusMarkup,
+            items: [ xx ],
+            maximizable: true,
+            collapsible: true,
+            anchorPosition: 'auto'
+        });
+        // unselect feature when the popup
+        // is closed
+        popup.on({
+            close: function() {
+                if(OpenLayers.Util.indexOf(vector.selectedFeatures,
+                  this.feature) > -1) {
+                  selectCtrl.unselect(this.feature);
+                }
+            }
+        });
+        popup.show();
+    }
+
+    // Add Popup: create popup on "featureselected"
+    vector.events.on({
+      featureselected: function(e) {
+        var chk = Ext.getCmp('id_select_feat').pressed;
+        if (chk == false)
+          return false;
+        else 
+          createPopup(e.feature);
+      }
+    });
     
     // Measure Length control
     ctrl_measure_length = new OpenLayers.Control.Measure(OpenLayers.Handler.Path, {
@@ -110,10 +170,10 @@ Ext.application({
         iconCls: 'zoomfull',
         control: new OpenLayers.Control.ZoomToMaxExtent(),
         map: map,
-        // button options
+        toggleGroup: "draw",
         allowDepress: false,
         pressed: false,
-        tooltip: "แสดงแผนที่โลก"
+        tooltip: "แสดงแผนที่ประเทศไทย"
     });
     actions["zoomfull"] = action;
     toolbarItems.push(Ext.create('Ext.button.Button', action));
@@ -126,6 +186,7 @@ Ext.application({
         iconCls: 'zoomin',
         control: new OpenLayers.Control.ZoomIn(),
         map: map,
+        toggleGroup: "draw",
         allowDepress: false,
         pressed: false,
         tooltip: "ขยายขนาดแผนที่"
@@ -139,6 +200,7 @@ Ext.application({
         iconCls: 'zoomout',
         control: new OpenLayers.Control.ZoomOut(),
         map: map,
+        toggleGroup: "draw",
         allowDepress: false,
         pressed: false,
         tooltip: "ย่อขนาดแผนที่"
@@ -154,7 +216,7 @@ Ext.application({
       map: map,
       // button options
       toggleGroup: "draw",
-      allowDepress: false,
+      allowDepress: true,
       tooltip: "Draw a point",
       // check item options
       group: "draw"
@@ -168,7 +230,7 @@ Ext.application({
       map: map,
       // button options
       toggleGroup: "draw",
-      allowDepress: false,
+      allowDepress: true,
       tooltip: "Draw a line",
       // check item options
       group: "draw"
@@ -182,7 +244,7 @@ Ext.application({
       map: map,
       // button options
       toggleGroup: "draw",
-      allowDepress: false,
+      allowDepress: true,
       tooltip: "Draw a polygon",
       // check item options
       group: "draw"
@@ -198,7 +260,7 @@ Ext.application({
       map: map,
       // button options
       toggleGroup: "draw",
-      allowDepress: false,
+      allowDepress: true,
       tooltip: "Modify Feature",
       // check item options
       group: "draw"
@@ -212,7 +274,7 @@ Ext.application({
       map: map,
       // button options
       toggleGroup: "draw",
-      allowDepress: false,
+      allowDepress: true,
       tooltip: "Delete Feature",
       // check item options
       group: "draw"
@@ -224,7 +286,22 @@ Ext.application({
         
     toolbarItems.push(btn_measure_length);
     toolbarItems.push(btn_measure_area);
-        
+
+    toolbarItems.push("-");
+
+    action = Ext.create('GeoExt.Action', {
+      iconCls: "select_feat",
+      id: 'id_select_feat',
+      control: selectCtrl,
+      map: map,
+      enableToggle: true,
+      toggleGroup: "draw",
+      allowDepress: true,
+      tooltip: "Input Form",
+    });
+    actions["select_feat"] = action;
+    toolbarItems.push(Ext.create('Ext.button.Button', action));    
+    
     toolbarItems.push("->");
     
     // Reuse the GeoExt.Action objects created above
@@ -276,6 +353,12 @@ Ext.application({
             //ERROR: when preesing this button --> 
             handler: function(){
               $("#id_printDialog-body").printElement({printMode:'popup'});
+            }
+          },'->',{
+            iconCls: 'close',
+            tooltip: 'Close',
+            handler: function(){
+              Ext.getCmp('id_printDialog').close();
             }
           }]
         });
