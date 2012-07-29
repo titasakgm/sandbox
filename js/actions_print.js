@@ -9,7 +9,13 @@ Ext.require([
   'GeoExt.panel.PrintMap',
 
   // Add popup  
-  'GeoExt.window.Popup'
+  'GeoExt.window.Popup',
+  
+  // Add Form
+  'Ext.form.Panel',
+  'Ext.layout.container.Column',
+  'Ext.tab.Panel',
+  'Ext.form.field.HtmlEditor'
 
 ]);
 
@@ -54,30 +60,145 @@ Ext.application({
     var vector = new OpenLayers.Layer.Vector("vector");
 
     // Add Popup
-    var popup
+    var popup;
     
     // Add Popup: create select feature control
     var selectCtrl = new OpenLayers.Control.SelectFeature(vector);
 
-    // Add Popup: define "createPopup" function
-    var bogusMarkup = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " +
-            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " +
-            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit." +
-            "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.";
+    // Add Popup: define "createPopup" function + Input Form
 
-    var xx = new Ext.form.TextField({
-      fieldLabel: 'Field1'
+    var frm_input = Ext.create('Ext.form.Panel', {
+        title: 'Inner Tabs',
+        id: 'id_frm_input',
+        bodyStyle:'padding:5px',
+        width: 600,
+        fieldDefaults: {
+            labelAlign: 'top',
+            msgTarget: 'side'
+        },
+        defaults: {
+            anchor: '100%'
+        },
+
+        items: [{
+            layout:'column',
+            border:false,
+            items:[{
+                columnWidth:.5,
+                border:false,
+                layout: 'anchor',
+                defaultType: 'textfield',
+                items: [{
+                    fieldLabel: 'First Name',
+                    name: 'first',
+                    anchor:'95%'
+                }, {
+                    fieldLabel: 'Company',
+                    name: 'company',
+                    anchor:'95%'
+                }]
+            },{
+                columnWidth:.5,
+                border:false,
+                layout: 'anchor',
+                defaultType: 'textfield',
+                items: [{
+                    fieldLabel: 'Last Name',
+                    name: 'last',
+                    anchor:'95%'
+                },{
+                    fieldLabel: 'Email',
+                    name: 'email',
+                    vtype:'email',
+                    anchor:'95%'
+                }]
+            }]
+        },{
+            xtype:'tabpanel',
+            plain:true,
+            activeTab: 0,
+            height:235,
+            defaults:{bodyStyle:'padding:10px'},
+            items:[{
+                title:'Personal Details',
+                defaults: {width: 230},
+                defaultType: 'textfield',
+
+                items: [{
+                    fieldLabel: 'First Name',
+                    name: 'first',
+                    allowBlank:false,
+                    value: 'Titasak'
+                },{
+                    fieldLabel: 'Last Name',
+                    name: 'last',
+                    value: 'Boonthai'
+                }, {
+                    fieldLabel: 'Email',
+                    name: 'email',
+                    vtype:'email'
+                },{
+                    fieldLabel: 'Location',
+                    name: 'location',
+                    id: 'id_location'
+                }]
+            },{
+                title:'Phone Numbers',
+                defaults: {width: 230},
+                defaultType: 'textfield',
+
+                items: [{
+                    fieldLabel: 'Home',
+                    name: 'home',
+                    value: '(888) 555-1212'
+                },{
+                    fieldLabel: 'Business',
+                    name: 'business'
+                },{
+                    fieldLabel: 'Mobile',
+                    name: 'mobile'
+                },{
+                    fieldLabel: 'Fax',
+                    name: 'fax'
+                }]
+            },{
+                cls: 'x-plain',
+                title: 'Biography',
+                layout: 'fit',
+                items: {
+                    xtype: 'htmleditor',
+                    name: 'bio2',
+                    fieldLabel: 'Biography'
+                }
+            }]
+        }],
+
+        buttons: [{
+            text: 'Save'
+        },{
+            text: 'Cancel'
+        }]
     });
-    
+
     function createPopup(feature) {
+      var lon = feature.geometry.x;
+      var lat = feature.geometry.y;
+      var curr_loc = feature.geometry.toString();
+      Ext.getCmp('id_location').setValue(curr_loc);
+      
+      //debugger;
+      
+      if (!popup) {
         popup = Ext.create('GeoExt.window.Popup', {
             title: 'My Popup',
+            id: 'id_popup',
             location: feature,
-            width:200,
+            width:604,
             //html: bogusMarkup,
-            items: [ xx ],
+            items: [ frm_input ],
             maximizable: true,
             collapsible: true,
+            closeAction: 'hide',
             anchorPosition: 'auto'
         });
         // unselect feature when the popup
@@ -90,7 +211,9 @@ Ext.application({
                 }
             }
         });
-        popup.show();
+      }
+      popup.center();
+      popup.show();
     }
 
     // Add Popup: create popup on "featureselected"
