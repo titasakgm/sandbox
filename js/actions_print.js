@@ -15,8 +15,9 @@ Ext.require([
   'Ext.form.Panel',
   'Ext.layout.container.Column',
   'Ext.tab.Panel',
+  'Ext.form.field.ComboBox',
+  'Ext.form.field.Date',
   'Ext.form.field.HtmlEditor'
-
 ]);
 
 Ext.application({
@@ -120,7 +121,7 @@ Ext.application({
             height:235,
             defaults:{bodyStyle:'padding:10px'},
             items:[{
-                title:'Personal Details',
+                title:'Field Types Demo',
                 defaults: {width: 230},
                 defaultType: 'textfield',
 
@@ -130,17 +131,29 @@ Ext.application({
                     allowBlank:false,
                     value: 'Titasak'
                 },{
-                    fieldLabel: 'Last Name',
-                    name: 'last',
-                    value: 'Boonthai'
+                  xtype : 'combo',
+                  fieldLabel : 'Sex',
+                  store : new Ext.data.SimpleStore({
+                    data : [[1, 'Male'], [2, 'Female']],
+                    id : 0,
+                    fields : ['value', 'text']
+                  }),
+                  valueField : 'value',
+                  displayField : 'text',
+                  triggerAction : 'all',
+                  editable : false,
+                  name : 'sex'
                 }, {
-                    fieldLabel: 'Email',
-                    name: 'email',
-                    vtype:'email'
+                    xtype: 'datefield',
+                    fieldLabel: 'Date',
+                    name: 'date'
                 },{
+                    xtype: 'textareafield',
                     fieldLabel: 'Location',
                     name: 'location',
-                    id: 'id_location'
+                    id: 'id_location',
+                    width: '100%',
+                    anchor: '100%'
                 }]
             },{
                 title:'Phone Numbers',
@@ -163,12 +176,12 @@ Ext.application({
                 }]
             },{
                 cls: 'x-plain',
-                title: 'Biography',
+                title: 'WYSIWYG',
                 layout: 'fit',
                 items: {
                     xtype: 'htmleditor',
                     name: 'bio2',
-                    fieldLabel: 'Biography'
+                    fieldLabel: 'WYSIWYG'
                 }
             }]
         }],
@@ -186,7 +199,7 @@ Ext.application({
       var curr_loc = feature.geometry.toString();
       Ext.getCmp('id_location').setValue(curr_loc);
       
-      //debugger;
+      debugger;
       
       if (!popup) {
         popup = Ext.create('GeoExt.window.Popup', {
@@ -466,6 +479,7 @@ Ext.application({
           autoHeight: true,
           items: [{
             xtype: "gx_printmappanel",
+            id: 'id_preview',
             sourceMap: mappanel,
             printProvider: printProvider
           }],
@@ -475,7 +489,7 @@ Ext.application({
             //handler: function(){ printDialog.items.get(0).print(); }
             //ERROR: when preesing this button --> 
             handler: function(){
-              $("#id_printDialog-body").printElement({printMode:'popup'});
+              $("#id_preview-body").printElement({printMode:'popup'});
             }
           },'->',{
             iconCls: 'close',
